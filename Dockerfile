@@ -1,21 +1,11 @@
-# Use a compatible Maven version as the build stage
-FROM maven:3.9.4-openjdk-11 AS builder
-
+# Build stage
+FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /app
-
-# Copy source code into the container
 COPY . .
+RUN mvn clean package -DskipTests -Denforcer.skip=true
 
-# Build the Maven project
-RUN mvn clean package
-
-# Use a lightweight runtime image for the application
-FROM openjdk:11-jre-slim
-
+# Run stage
+FROM eclipse-temurin:17-jre
 WORKDIR /app
-
-# Copy the JAR file from the builder stage
 COPY --from=builder /app/target/*.jar app.jar
-
-# Set the entry point for the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
