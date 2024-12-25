@@ -1,74 +1,13 @@
-name: Increment Patch Version
-
+name: Increment Version
 on:
   push:
-    branches:
-      - master
-
+    branches: [master]
 jobs:
-  increment-version:
+  version:
     runs-on: ubuntu-latest
-
     steps:
-      # Step 1: Check out the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Step 2: Set up Python (for version parsing)
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v3
+      - uses: christian-draeger/increment-semantic-version@1.1.0
         with:
-          python-version: 3.x
-
-      # Step 3: Increment the version
-      - name: Increment patch version
-        id: versioning
-        run: |
-          python - <<EOF
-          import xml.etree.ElementTree as ET
-      
-          # Parse pom.xml
-          tree = ET.parse('pom.xml')
-          root = tree.getroot()
-          ns = {'m': 'http://maven.apache.org/POM/4.0.0'}
-          version_element = root.find('m:version', ns)
-          current_version = version_element.text.strip()
-      
-          # Strip non-numeric suffix (e.g., -SNAPSHOT)
-          base_version = current_version.split('-')[0]
-      
-          # Handle version parts (e.g., 1.0, 1.0.0)
-          version_parts = base_version.split('.')
-          if len(version_parts) == 2:  # If version is X.Y, treat patch as 0
-              major, minor = map(int, version_parts)
-              patch = 0
-          elif len(version_parts) == 3:  # Standard X.Y.Z
-              major, minor, patch = map(int, version_parts)
-          else:
-              raise ValueError(f"Unexpected version format: {current_version}")
-      
-          # Increment the patch version
-          patch += 1
-          new_version = f"{major}.{minor}.{patch}-SNAPSHOT"  # Re-add the -SNAPSHOT suffix
-          print(f"Current version: {current_version}")
-          print(f"New version: {new_version}")
-      
-          # Update pom.xml
-          version_element.text = new_version
-          tree.write('pom.xml')
-      
-          # Save the new version for the next step
-          with open('VERSION', 'w') as f:
-              f.write(new_version)
-          EOF
-
-
-
-      # Step 4: Commit the updated version
-      - name: Commit and push version bump
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add pom.xml
-          git commit -m "Bump version to ${{ steps.versioning.outputs.new_version }}"
-          git push
+          current-version: '1.0.0'
+          version-fragment: 'patch'
