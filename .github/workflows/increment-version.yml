@@ -6,14 +6,16 @@ jobs:
   version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v3 # Clone To Instance Runs The Workflow
+      - uses: actions/setup-java@v3 # Install Java 17
         with:
           java-version: '17'
           distribution: 'temurin'
       - run: |
-          mvn release:update-versions -DautoVersionSubmodules=true
+          mvn release:update-versions -DautoVersionSubmodules=true  # Update Version Include Submodules
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -am "Bump version"
+          git commit -am "Update Version"
           git push
+
+# Used maven-release-plugin
