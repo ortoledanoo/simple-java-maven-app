@@ -32,13 +32,22 @@ jobs:
           root = tree.getroot()
           ns = {'m': 'http://maven.apache.org/POM/4.0.0'}
           version_element = root.find('m:version', ns)
-          current_version = version_element.text
+          current_version = version_element.text.strip()
       
           # Strip non-numeric suffix (e.g., -SNAPSHOT)
           base_version = current_version.split('-')[0]
       
-          # Split and increment patch version
-          major, minor, patch = map(int, base_version.split('.'))
+          # Handle version parts (e.g., 1.0, 1.0.0)
+          version_parts = base_version.split('.')
+          if len(version_parts) == 2:  # If version is X.Y, treat patch as 0
+              major, minor = map(int, version_parts)
+              patch = 0
+          elif len(version_parts) == 3:  # Standard X.Y.Z
+              major, minor, patch = map(int, version_parts)
+          else:
+              raise ValueError(f"Unexpected version format: {current_version}")
+      
+          # Increment the patch version
           patch += 1
           new_version = f"{major}.{minor}.{patch}-SNAPSHOT"  # Re-add the -SNAPSHOT suffix
           print(f"Current version: {current_version}")
@@ -52,6 +61,7 @@ jobs:
           with open('VERSION', 'w') as f:
               f.write(new_version)
           EOF
+
 
 
       # Step 4: Commit the updated version
