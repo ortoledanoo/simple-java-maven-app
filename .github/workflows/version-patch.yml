@@ -1,0 +1,56 @@
+name: Increment Patch Version
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  increment-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Python (for version parsing)
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
+      # Step 3: Increment the version
+      - name: Increment patch version
+        id: versioning
+        run: |
+          import xml.etree.ElementTree as ET
+
+          # Parse pom.xml
+          tree = ET.parse('pom.xml')
+          root = tree.getroot()
+          ns = {'m': 'http://maven.apache.org/POM/4.0.0'}
+          version = root.find('m:version', ns).text
+
+          # Split and increment patch version
+          major, minor, patch = map(int, version.split('.'))
+          patch += 1
+          new_version = f"{major}.{minor}.{patch}"
+
+          # Update the version in pom.xml
+          root.find('m:version', ns).text = new_version
+          tree.write('pom.xml')
+
+          # Output new version
+          print(f"New version: {new_version}")
+          with open('VERSION', 'w') as f:
+              f.write(new_version)
+
+      # Step 4: Commit the updated version
+      - name: Commit and push version bump
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add pom.xml
+          git commit -m "Bump version to ${{ steps.versioning.outputs.new_version }}"
+          git push
