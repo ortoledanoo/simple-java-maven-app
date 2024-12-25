@@ -34,10 +34,13 @@ jobs:
           version_element = root.find('m:version', ns)
           current_version = version_element.text
       
+          # Strip non-numeric suffix (e.g., -SNAPSHOT)
+          base_version = current_version.split('-')[0]
+      
           # Split and increment patch version
-          major, minor, patch = map(int, current_version.split('.'))
+          major, minor, patch = map(int, base_version.split('.'))
           patch += 1
-          new_version = f"{major}.{minor}.{patch}"
+          new_version = f"{major}.{minor}.{patch}-SNAPSHOT"  # Re-add the -SNAPSHOT suffix
           print(f"Current version: {current_version}")
           print(f"New version: {new_version}")
       
