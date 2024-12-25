@@ -3,7 +3,7 @@ name: Increment Patch Version
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   increment-version:
