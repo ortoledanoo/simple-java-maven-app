@@ -1,5 +1,5 @@
 # Use an official Maven image as the build stage
-FROM maven:3.8.5-openjdk-11 AS builder
+FROM maven:3.9.4-openjdk-11 AS builder
 
 # Set the working directory inside the container
 WORKDIR /app
