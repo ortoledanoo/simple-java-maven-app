@@ -59,20 +59,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY }}
           aws-region: il-central-1
       
-      - name: Get EC2 Public IP
-        id: ec2-ip
-        run: |
-          IP=$(aws ec2 describe-instances --instance-ids $AWS_EC2_ID --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
-          echo "Debug: Raw IP value is: $IP"
-          if [ "$IP" = "None" ] || [ -z "$IP" ]; then
-            echo "Error: Could not get EC2 IP address"
-            echo "Debug: AWS_EC2_ID is: $AWS_EC2_ID"
-            aws ec2 describe-instances --instance-ids $AWS_EC2_ID
-            exit 1
-          fi
-          echo "EC2_IP=$IP" >> $GITHUB_ENV
-          echo "Successfully set EC2_IP to: $IP"
-      
       - name: Get Runner IP
         id: ip
         uses: haythem/public-ip@v1.2
@@ -85,15 +71,8 @@ jobs:
       
       - name: Add Known Hosts
         run: |
-          echo "Debug: Current EC2_IP value is: ${{ env.EC2_IP }}"
-          if [ "${{ env.EC2_IP }}" = "None" ] || [ -z "${{ env.EC2_IP }}" ]; then
-            echo "Error: EC2_IP is not properly set"
-            exit 1
-          fi
-          ssh-keyscan -H ${{ env.EC2_IP }} >> ~/.ssh/known_hosts || {
-            echo "Error: ssh-keyscan failed"
-            exit 1
-          }
+          ssh-keyscan -H 51.16.217.95 >> ~/.ssh/known_hosts || {
+
       
       - name: Whitelist Runner IP
         run: |
@@ -105,7 +84,7 @@ jobs:
       
       - name: Execute Remote SSH Commands
         run: |
-          ssh ${{ secrets.EC2_USER }}@${{ env.EC2_IP }} "echo Hello World"
+          ssh ${{ secrets.EC2_USER }}@51.16.217.95 "echo Hello World"
       
       - name: Remove Runner IP
         if: always()
@@ -115,4 +94,3 @@ jobs:
             --protocol tcp \
             --port 22 \
             --cidr ${{ steps.ip.outputs.ipv4 }}/32
-            
