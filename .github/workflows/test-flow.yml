@@ -63,8 +63,15 @@ jobs:
         id: ec2-ip
         run: |
           IP=$(aws ec2 describe-instances --instance-ids $AWS_EC2_ID --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+          echo "Debug: Raw IP value is: $IP"
+          if [ "$IP" = "None" ] || [ -z "$IP" ]; then
+            echo "Error: Could not get EC2 IP address"
+            echo "Debug: AWS_EC2_ID is: $AWS_EC2_ID"
+            aws ec2 describe-instances --instance-ids $AWS_EC2_ID
+            exit 1
+          fi
           echo "EC2_IP=$IP" >> $GITHUB_ENV
-          echo "Public IP is: $IP"
+          echo "Successfully set EC2_IP to: $IP"
       
       - name: Get Runner IP
         id: ip
@@ -78,13 +85,15 @@ jobs:
       
       - name: Add Known Hosts
         run: |
-          if [ -n "${{ env.EC2_IP }}" ]; then
-            ssh-keyscan -H ${{ env.EC2_IP }} >> ~/.ssh/known_hosts
-            echo "Added ${{ env.EC2_IP }} to known_hosts"
-          else
-            echo "EC2_IP is not set"
+          echo "Debug: Current EC2_IP value is: ${{ env.EC2_IP }}"
+          if [ "${{ env.EC2_IP }}" = "None" ] || [ -z "${{ env.EC2_IP }}" ]; then
+            echo "Error: EC2_IP is not properly set"
             exit 1
           fi
+          ssh-keyscan -H ${{ env.EC2_IP }} >> ~/.ssh/known_hosts || {
+            echo "Error: ssh-keyscan failed"
+            exit 1
+          }
       
       - name: Whitelist Runner IP
         run: |
